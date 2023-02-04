@@ -3,7 +3,7 @@
     "deno.unstable": true,
 		"deno.lint": true,
 		"deno.path": "/opt/homebrew/bin/deno",
-		"deno.importMap": "./import_map.json",
+		"deno.config": "deno.json",
 		"[typescript]": {
 			"editor.defaultFormatter": "denoland.vscode-deno"
 		},

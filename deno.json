@@ -1,0 +1,45 @@
+{
+	"imports": {
+		"std/":"https://deno.land/std@0.176.0/",
+    "npm/": "https://unpkg.com/"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "lint": {
+    "files": {
+      "include": ["src/"],
+      "exclude": [""]
+    },
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["ban-untagged-todo"],
+      "exclude": ["no-unused-vars"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["src/"],
+      "exclude": [""]
+    },
+    "options": {
+      "useTabs": true,
+      "lineWidth": 160,
+      "indentWidth": 2,
+      "semiColons": false,
+      "singleQuote": true,
+      "proseWrap": "preserve"
+    }
+  },
+	"tasks": {
+    "dev": "deno run --allow-net --allow-env --allow-read --unstable --watch src/index.ts"
+  },
+  "test": {
+    "files": {
+      "include": ["test/"],
+      "exclude": [""]
+    }
+  }
+}
