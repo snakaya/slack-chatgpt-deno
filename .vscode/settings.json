@@ -1,0 +1,13 @@
+{
+    "deno.enable": true,
+    "deno.unstable": true,
+		"deno.lint": true,
+		"deno.path": "/opt/homebrew/bin/deno",
+		"deno.importMap": "./import_map.json",
+		"[typescript]": {
+			"editor.defaultFormatter": "denoland.vscode-deno"
+		},
+		"yaml.schemas": {
+			"https://json.schemastore.org/github-workflow.json": ".github/workflows/deploy.yml"
+		}
+}
