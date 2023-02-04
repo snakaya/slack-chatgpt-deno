@@ -1,5 +1,5 @@
 export type VerifySubscriptionJSON = {
-	token: string,
-	challenge: string,
-	type: string,
+	[ key in VerifySubscriptionJSONAtributes]: string;
 }
+
+type VerifySubscriptionJSONAtributes = 'token' | 'challenge' | 'type';
