@@ -1,6 +1,6 @@
 import "https://deno.land/std@0.167.0/dotenv/load.ts";
 import { serve } from "https://deno.land/std@0.174.0/http/server.ts";
-import EventsRouter from "./eventsRouter.ts";
+import { EventsRouter } from "./eventsRouter.ts";
 import { EventAnswer } from "./types/eventAnswer.d.ts";
 
 async function handler(request: Request): Promise<Response> {
@@ -17,7 +17,7 @@ async function handler(request: Request): Promise<Response> {
     OPENAI_API_KEY: Deno.env.get("OPENAI_API_KEY") || "",
   };
   const eventsRouter = EventsRouter(requestBody, requestMethod, requestURL, requestContentType, envvars);
-  const answer: EventAnswer = await eventsRouter;
+  const answer: EventAnswer = eventsRouter;
 
   return new Response(answer.message, {
     status: answer.statusCode,

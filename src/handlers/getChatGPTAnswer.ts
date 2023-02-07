@@ -1,6 +1,6 @@
 import { EventAnswer } from "../../src/types/eventAnswer.d.ts";
 
-export default async (question: string, openaiAPIKey: string): Promise<EventAnswer> => {
+export async function GetChatGPTAnswer(question: string, openaiAPIKey: string): Promise<EventAnswer> {
   // deno-lint-ignore prefer-const
   let answer: EventAnswer = {
     statusCode: 400,
@@ -30,20 +30,23 @@ export default async (question: string, openaiAPIKey: string): Promise<EventAnsw
       "https://api.openai.com/v1/completions",
       options,
     );
+		if(res.status != 200) {
+			console.error(`Response Status: ${res.status} ${res.statusText}`);
+			throw new Error(`Response Status: ${res.status} ${res.statusText}`);
+		}
     // deno-lint-ignore no-explicit-any
     const responseAnswer: any = await res.json();
 
     console.debug(JSON.stringify(responseAnswer));
     answer.statusCode = 200;
-    answer.contentType = "application/json";
+    answer.contentType = "application/json; charset=utf-8";
     answer.message = JSON.stringify({
       text: (responseAnswer.choices[0].text || "").trim(),
     });
-    return answer;
   } catch (e) {
-    console.debug(`Unkown other error: [${e}]`);
+    console.error(`Unkown other error: [${e}]`);
     answer.statusCode = 500;
     answer.message = `Unknown other error: [${e}]`;
-    return answer;
   }
+	return answer;
 };

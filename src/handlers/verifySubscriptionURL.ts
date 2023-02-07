@@ -1,7 +1,7 @@
 import { EventAnswer } from "../../src/types/eventAnswer.d.ts";
 import { VerifySubscriptionJSON } from "../../src/types/verifySubscriptionJSON.d.ts";
 
-export default (bodytext: string, slackBotToken: string): EventAnswer => {
+export function verifySubscriptionURL(bodytext: string, slackBotToken: string): EventAnswer {
   // deno-lint-ignore prefer-const
   let answer: EventAnswer = {
     statusCode: 400,
@@ -9,8 +9,12 @@ export default (bodytext: string, slackBotToken: string): EventAnswer => {
     message: `Unknown error: [${bodytext}]`,
   };
   try {
-    console.debug(bodytext);
     const bodyjson: VerifySubscriptionJSON = JSON.parse(bodytext);
+		console.debug(bodyjson);
+		console.debug(Object.keys(JSON.parse(bodytext)).sort().toString());
+		if(Object.keys(JSON.parse(bodytext)).sort().toString() != ['token', 'challenge', 'type'].sort().toString()) {
+			throw new Error('Parameter member is invalid');
+		}
     if (bodyjson.type != "url_verification") {
       console.debug(`Unmatch type error: [${bodyjson.type}]`);
       answer.statusCode = 400;
