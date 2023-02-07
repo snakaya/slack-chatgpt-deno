@@ -38,8 +38,7 @@
   },
   "test": {
     "files": {
-      "include": ["test/"],
-      "exclude": [""]
+      "include": ["test/**/*"],
     }
   }
 }
