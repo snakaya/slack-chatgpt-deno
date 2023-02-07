@@ -1,5 +1,7 @@
-name: Deploy
-on: [push]
+name: deno-Deploy
+on:
+  push:
+    branches: [main]
 
 jobs:
   deploy:
@@ -13,10 +15,16 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
-      # TODO: add a build step here
+      - name: Install deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Test
+        run:  deno test -A --unstable test/
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
           project: "slack-chatgpt-deno"
-          entrypoint: "./src/index.ts" # TODO: update entrypoint
+          entrypoint: "./src/index.ts"
