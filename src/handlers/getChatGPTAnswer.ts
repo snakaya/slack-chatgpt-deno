@@ -15,19 +15,17 @@ export async function GetChatGPTAnswer(question: string, openaiAPIKey: string): 
         "Authorization": `Bearer ${openaiAPIKey}`,
       },
       body: JSON.stringify({
-        "model": "text-davinci-003",
-        "prompt": question + "\n\n###\n\n",
-        "temperature": 0,
-        "max_tokens": 2048,
+        "model": "gpt-3.5-turbo",
+				"messages": [{"role": "user", "content": question}],
+        "temperature": 1,
         "frequency_penalty": 0.0,
-        "presence_penalty": 0.0,
-        "stop": '[" END", "###"]',
+        "presence_penalty": 1.0
       }),
     };
     console.debug(question);
     console.debug(JSON.stringify(options));
     const res = await fetch(
-      "https://api.openai.com/v1/completions",
+      "https://api.openai.com/v1/chat/completions",
       options,
     );
 		if(res.status != 200) {
@@ -41,7 +39,7 @@ export async function GetChatGPTAnswer(question: string, openaiAPIKey: string): 
     answer.statusCode = 200;
     answer.contentType = "application/json; charset=utf-8";
     answer.message = JSON.stringify({
-      text: (responseAnswer.choices[0].text || "").trim(),
+      text: (responseAnswer.choices[0].message.content || "").trim(),
     });
   } catch (e) {
     console.error(`Unkown other error: [${e}]`);
