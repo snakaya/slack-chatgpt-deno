@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.176.0/testing/asserts.ts";
 import * as mod from "https://deno.land/std@0.176.0/testing/bdd.ts";
 import { stub } from "https://deno.land/std@0.176.0/testing/mock.ts";
-import { EventsRouter, getChatGPTAnswer, slackWebhook, slackPostMessage} from "../src/eventsRouter.ts";
+import { EventsRouter, slackConversationsReplies, getChatGPTAnswer, slackWebhook, slackPostMessage} from "../src/eventsRouter.ts";
 import { EventAnswer } from "../src/types/eventAnswer.d.ts";
 
 
@@ -17,8 +17,15 @@ const eventRequestNormal1 = {"token":"Jhj5dZrVaK7ZwHHjRyZWjbDl","team_id":"T061E
 	"is_ext_shared_channel":false,"event_context":"4-eyJldCI6ImFwcF9tZW50aW9uIiwidGlkIjoiVDA2MUVHOVJaIiwiYWlkIjoiQTAxMjM0NTYiLCJxaWQiOiJDMDEyMzQ1NiJ9"};
 const tokenNormal1 = "Jhj5dZrVaK7ZwHHjRyZWjbDl";
 
-const chatgptResponseNormal1 = {"id":"cmpl-6xxxN24yGVavz1AOPlKxxx9ENv2As","object":"text_completion","created":1675280637,
-	"model":"text-davinci-003","choices":[{"text":"Yes, 3 is a prime number.","index":0,"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":17,"completion_tokens":13,"total_tokens":30}};
+const slackConversationsRepliesNormal1 = {"messages":[
+	{"type":"message","user":"U061F7AUR0","text":"island","thread_ts":"1482960137.003543",	"reply_count":3,"subscribed":true,"last_read":"1484678597.521003","unread_count":0,"ts":"1482960137.003543"},
+	{"type":"message","user":"U061F7AUR1","text":"oneisland","thread_ts":"1482960137.003543","parent_user_id":"U061F7AUR","ts":"1483037603.017503"},
+	{"type":"message","user":"U12345","text":"twoisland","thread_ts":"1482960137.003543","parent_user_id":"U061F7AUR","ts":"1483051909.018632"},
+	{"type":"message","user":"U061F7AUR3","text":"threefortheland","thread_ts":"1482960137.003543","parent_user_id":"U061F7AUR","ts":"1483125339.020269"}
+	],"has_more":true,"ok":true,"response_metadata":{"next_cursor":"bmV4dF90czoxNDg0Njc4MjkwNTE3MDkx"}};
+const chatgptResponseNormal1 = {"id":"cmpl-6xxxN24yGVavz1AOPlKxxx9ENv2As","object":"chat.completion","created":1677921284,
+	"model":"gpt-3.5-turbo-0301","usage":{"prompt_tokens":14,"completion_tokens":11,"total_tokens":25},
+	"choices":[{"message":{"role":"assistant","content":"\n\nNo, 3 is a prime number."},"finish_reason":"stop","index":0}]};
 const slashcommandResponseNormal1 = 'ok';
 
 let envvars = {
@@ -29,14 +36,21 @@ let envvars = {
 	SLACK_SLASHCOMMAND_REQUEST_PATH: "/slashcommand",
 	OPENAI_API_KEY: "OPENAI_API_KEY",
 };
+const repliesAnswer: EventAnswer = {
+	statusCode: 200,
+	contentType: "application/json; charset=utf-8",
+	message: JSON.stringify(slackConversationsRepliesNormal1),
+	routingType: "appMention",
+};
 const gptAnswer: EventAnswer = {
 	statusCode: 200,
 	contentType: "application/json; charset=utf-8",
 	message: JSON.stringify({
-		text: (chatgptResponseNormal1.choices[0].text || "").trim(),
+		text: (chatgptResponseNormal1.choices[0].message.content || "").trim(),
 	}),
 	routingType: "slashCommand",
 };
+const repliesStub = stub(slackConversationsReplies, "SlackConversationsReplies", () => Promise.resolve(repliesAnswer));
 const gptStub = stub(getChatGPTAnswer, "GetChatGPTAnswer", () => Promise.resolve(gptAnswer));
 const webhookStub = stub(slackWebhook, "SlackWebhook", () => Promise.resolve(new Response(slashcommandResponseNormal1, {status: 200,	headers: {"Content-Type": 'text/html',}})));
 const postmessageStub = stub(slackPostMessage, "SlackPostMessage", () => Promise.resolve(gptAnswer));

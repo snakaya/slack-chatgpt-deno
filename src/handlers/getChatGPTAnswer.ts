@@ -1,12 +1,14 @@
 import { EventAnswer } from "../../src/types/eventAnswer.d.ts";
+import { ChatGPTMessages } from "../../src/types/chatGPTMessages.d.ts";
 
-export async function GetChatGPTAnswer(question: string, openaiAPIKey: string): Promise<EventAnswer> {
+export async function GetChatGPTAnswer(chatGPTMessages: ChatGPTMessages[], openaiAPIKey: string): Promise<EventAnswer> {
   // deno-lint-ignore prefer-const
   let answer: EventAnswer = {
     statusCode: 400,
     contentType: "text/plain",
-    message: `Unknown error: [${question}]`,
+    message: "Unknown error.",
   };
+	console.debug(chatGPTMessages);
   try {
     const options = {
       method: "POST",
@@ -16,13 +18,12 @@ export async function GetChatGPTAnswer(question: string, openaiAPIKey: string): 
       },
       body: JSON.stringify({
         "model": "gpt-3.5-turbo",
-				"messages": [{"role": "user", "content": question}],
+				"messages": chatGPTMessages,
         "temperature": 1,
         "frequency_penalty": 0.0,
         "presence_penalty": 1.0
       }),
     };
-    console.debug(question);
     console.debug(JSON.stringify(options));
     const res = await fetch(
       "https://api.openai.com/v1/chat/completions",

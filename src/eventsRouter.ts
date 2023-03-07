@@ -3,8 +3,11 @@ import { verifySubscriptionURL } from "./handlers/verifySubscriptionURL.ts";
 import { GetChatGPTAnswer } from "./handlers/getChatGPTAnswer.ts";
 import { EventAnswer, RoutingType } from "./types/eventAnswer.d.ts";
 import { SlackWebhook } from "./handlers/slackWebhook.ts";
+import { SlackConversationsReplies } from "./handlers/slackConversationsReplies.ts";
 import { SlackPostMessage } from "./handlers/slackPostMessage.ts";
+import { ChatGPTMessages } from "./types/chatGPTMessages.d.ts";
 
+export const slackConversationsReplies = { SlackConversationsReplies };
 export const getChatGPTAnswer = { GetChatGPTAnswer };
 export const slackPostMessage = { SlackPostMessage };
 export const slackWebhook = { SlackWebhook };
@@ -39,11 +42,17 @@ export function EventsRouter(requestBody: string, requestMethod: string, request
 
 				// deno-lint-ignore no-explicit-any
 				const bodyJson: any = JSON.parse(requestBody);
-				const threadTs = bodyJson?.event?.ts || "";
+				const threadTs = bodyJson?.event?.thread_ts || bodyJson?.event?.ts || "";
+				const channelId = bodyJson?.event?.channel || "";
+				const botUser = bodyJson?.authorizations[0]?.user_id || "";
 				const question = bodyJson.event.text.replace(/<@\w+>/g, "").trim();
 				(async () => {
-					const gptAnswer = await getChatGPTAnswer.GetChatGPTAnswer(question, env.OPENAI_API_KEY);
-					await slackPostMessage.SlackPostMessage(JSON.parse(gptAnswer.message).text, threadTs, env.SLACK_BOT_TOKEN, env.SLACK_CHANNELL_NAME);
+					const repliesAnswer = await slackConversationsReplies.SlackConversationsReplies(threadTs, channelId, env.SLACK_BOT_TOKEN);
+					console.debug(repliesAnswer);
+					const chatGPTMessages: ChatGPTMessages[] = generateGPTMessages(question, JSON.stringify(JSON.parse(repliesAnswer.message).messages), botUser);
+					console.debug(chatGPTMessages);
+					const chatGPTAnswer = await getChatGPTAnswer.GetChatGPTAnswer(chatGPTMessages, env.OPENAI_API_KEY);
+					await slackPostMessage.SlackPostMessage(JSON.parse(chatGPTAnswer.message).text, threadTs, env.SLACK_CHANNELL_NAME, env.SLACK_BOT_TOKEN);
 				})(); // async
 				break;
 			}
@@ -58,9 +67,11 @@ export function EventsRouter(requestBody: string, requestMethod: string, request
 				const question = qs.get('text') || '';
 				const responseUrl = qs.get('response_url') || '';
 				(async () => {
-					const gptAnswer = await getChatGPTAnswer.GetChatGPTAnswer(question, env.OPENAI_API_KEY);
-					console.debug(gptAnswer);
-					const res = await slackWebhook.SlackWebhook((JSON.parse(gptAnswer.message)).text, responseUrl);
+					const chatGPTMessages: ChatGPTMessages[] = generateGPTMessages(question, '[]', '');
+					console.debug(chatGPTMessages);
+					const chatGPTAnswer = await getChatGPTAnswer.GetChatGPTAnswer(chatGPTMessages, env.OPENAI_API_KEY);
+					console.debug(chatGPTAnswer);
+					const res = await slackWebhook.SlackWebhook((JSON.parse(chatGPTAnswer.message)).text, responseUrl);
 					console.debug(res);
 				})(); // async
 				break;
@@ -98,6 +109,24 @@ function handleRoutingType(requestBody: string, requestMethod: string, requestUR
 		throw e;
 	}
   return routingType;
+}
+
+function generateGPTMessages(question: string, repliesMessages: string , botUser: string): ChatGPTMessages[] {
+	const chatGPTMessages: ChatGPTMessages[] = [];
+	const replies = JSON.parse(repliesMessages);
+
+	for(const entry of replies) {
+		if(entry.user == botUser) {
+			chatGPTMessages.push({"role": "assistant", "content": entry.text.replace(/<@\w+>/g, "").trim()},);
+		} else {
+			chatGPTMessages.push({"role": "user", "content": entry.text.replace(/<@\w+>/g, "").trim()},);
+		}
+	}
+	if(replies.length == 0 || replies[replies.length - 1].text.replace(/<@\w+>/g, "").trim() != question.replace(/<@\w+>/g, "").trim() ) {
+		chatGPTMessages.push({"role": "user", "content": question.replace(/<@\w+>/g, "").trim()},);
+	}
+
+	return chatGPTMessages;
 }
 
 function parseQueryString(requestBody: string): Map<string, string> {

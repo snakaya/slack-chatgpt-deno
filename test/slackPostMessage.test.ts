@@ -50,7 +50,7 @@ mod.describe("slackPostMessage Error", () => {
   mod.it("StatusCode is 500", async () => {
 		const fetchStub = stub(globalThis, "fetch", () => Promise.resolve(new Response(JSON.stringify(eventResponseNormail1), {status: 500,	headers: {"Content-Type": 'application/json; charset=utf-8',}})));
 		try {
-			const resAnswer = await slackPostMessage.SlackPostMessage(JSON.parse(testAnswer.message).text, threadTs, slack_bot_token, channel_name);
+			const resAnswer = await slackPostMessage.SlackPostMessage(JSON.parse(testAnswer.message).text, threadTs, channel_name, slack_bot_token);
 			console.debug(resAnswer);
 			assertEquals(resAnswer.statusCode, 500);
 			assertEquals(resAnswer.contentType, "text/plain");
@@ -64,7 +64,7 @@ mod.describe("slackPostMessage Error", () => {
 		eventResponseError.ok = false;
 		const fetchStub = stub(globalThis, "fetch", () => Promise.resolve(new Response(JSON.stringify(eventResponseError), {status: 200,	headers: {"Content-Type": 'application/json; charset=utf-8',}})));
 		try {
-			const resAnswer = await slackPostMessage.SlackPostMessage(JSON.parse(testAnswer.message).text, threadTs, slack_bot_token, channel_name);
+			const resAnswer = await slackPostMessage.SlackPostMessage(JSON.parse(testAnswer.message).text, threadTs, channel_name, slack_bot_token);
 			console.debug(resAnswer);
 			assertEquals(resAnswer.statusCode, 500);
 			assertEquals(resAnswer.contentType, "text/plain");

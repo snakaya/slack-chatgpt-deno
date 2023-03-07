@@ -1,28 +1,25 @@
 import { EventAnswer } from "../types/eventAnswer.d.ts";
 
-export async function SlackPostMessage(message: string, threadTs: string, channelName: string, slackBotToken: string): Promise<EventAnswer> {
+export async function SlackConversationsReplies(threadTs: string, channelId: string, slackBotToken: string): Promise<EventAnswer> {
 	let answer: EventAnswer = {
     statusCode: 400,
     contentType: "text/plain",
-    message: `Unknown error: [${message}]`,
+    message: "Unknown error"
   };
 	try {
 		const options = {
-			method: "POST",
+			method: "GET",
 			headers: {
-				"Content-Type": "application/json; charset=utf-8",
+				"Content-Type": "application/x-www-form-urlencoded",
 				"Authorization": `Bearer ${slackBotToken}`,
 			},
-			body: JSON.stringify({
-				"text": message,
-				"channel": channelName,
-				"thread_ts": threadTs,
-			}),
 		};
+		const queryString = (new URLSearchParams({"channel": channelId, "ts": threadTs})).toString();
 		console.debug(options);
+		console.debug(`https://slack.com/api/conversations.replies?${queryString}`);
     // deno-lint-ignore no-unused-vars
     const res = await fetch(
-      "https://slack.com/api/chat.postMessage",
+      `https://slack.com/api/conversations.replies?${queryString}`,
       options,
     );
 		if(res.status != 200) {
